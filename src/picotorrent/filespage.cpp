@@ -30,7 +30,7 @@ FilesPage::FilesPage(wxWindow* parent, wxWindowID id, std::shared_ptr<pt::Transl
     : wxPanel(parent, id),
     m_trans(tran),
     m_wrapper(std::make_unique<HandleWrapper>()),
-    m_filesView(new wxDataViewCtrl(this, ptID_FILE_LIST)),
+    m_filesView(new wxDataViewCtrl(this, ptID_FILE_LIST, wxDefaultPosition, wxDefaultSize, wxDV_MULTIPLE)),
     m_viewModel(new FileStorageViewModel(tran))
 {
     auto nameCol = m_filesView->AppendIconTextColumn(
@@ -123,8 +123,14 @@ void FilesPage::OnFileContextMenu(wxDataViewEvent& event)
 
 void FilesPage::OnSetPriority(wxCommandEvent& event)
 {
-    wxDataViewItem item = m_filesView->GetSelection();
-    std::vector<int> fileIndices = m_viewModel->GetFileIndices(item);
+    wxDataViewItemArray items;
+    m_filesView->GetSelections(items);
+    std::vector<int> fileIndices;
+    for (auto item : items)
+    {
+        std::vector<int> indices = m_viewModel->GetFileIndices(item);
+        fileIndices.insert(fileIndices.end(), indices.begin(), indices.end());
+    }
 
     for (auto index : fileIndices)
     {
